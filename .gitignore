@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+audit.db
+env/
+venv/
+instance/
