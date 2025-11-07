@@ -1,0 +1,115 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6">
+  <h2 class="text-3xl font-bold mb-6 text-gray-700 dark:text-gray-200">📄 Past Security Reports</h2>
+
+  {% if scans %}
+  <table class="min-w-full border border-gray-300 dark:border-gray-700">
+    <thead class="bg-indigo-100 dark:bg-gray-700">
+      <tr>
+        <th class="py-3 px-4 text-left">Scan ID</th>
+        <th class="py-3 px-4 text-left">Target</th>
+        <th class="py-3 px-4 text-left">Started</th>
+        <th class="py-3 px-4 text-left">Finished</th>
+        <th class="py-3 px-4 text-left">Score</th>
+        <th class="py-3 px-4 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+      {% for scan in scans %}
+      <tr>
+        <td class="py-2 px-4">{{ scan[0] }}</td>
+        <td class="py-2 px-4 truncate max-w-xs">{{ scan[1] }}</td>
+        <td class="py-2 px-4">{{ scan[2] or '—' }}</td>
+        <td class="py-2 px-4">{{ scan[3] or '—' }}</td>
+        <td class="py-2 px-4 font-semibold {% if scan[4] < 50 %}text-red-600{% elif scan[4] < 80 %}text-yellow-600{% else %}text-green-600{% endif %}">
+          {{ scan[4] }}
+        </td>
+        <td class="py-2 px-4 flex gap-3">
+          <a href="/report/{{ scan[0] }}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+            Download PDF
+          </a>
+          <button onclick="deleteScan({{ scan[0] }})" class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition">
+            Delete
+          </button>
+        </td>
+        <td class="py-2 px-4 flex gap-3">
+          <button
+            onclick="viewReport({{ scan[0] }})"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+          View
+          </button>
+
+          <a
+            href="/report/{{ scan[0] }}"
+            class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition"
+          >
+            Download
+          </a>
+
+          <button
+            onclick="deleteScan({{ scan[0] }})"
+            class="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition"
+          >
+            Delete
+          </button>
+        </td>
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- PDF Modal -->
+  <div
+    id="pdfModal"
+    class="fixed inset-0 bg-black bg-opacity-50 hidden justify-center items-center z-50"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-11/12 h-[90vh] flex flex-col overflow-hidden">
+      <div class="flex justify-between items-center bg-indigo-600 text-white px-4 py-3">
+        <h3 class="text-xl font-semibold">Report Preview</h3>
+        <button onclick="closeModal()" class="text-white text-2xl">&times;</button>
+      </div>
+      <iframe id="pdfFrame" class="flex-grow w-full" frameborder="0"></iframe>
+    </div>
+  </div>
+
+  <script>
+  function viewReport(scanId) {
+    const modal = document.getElementById("pdfModal");
+    const frame = document.getElementById("pdfFrame");
+    frame.src = `/report/${scanId}?view=1`; // load PDF in iframe
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  }
+
+  function closeModal() {
+    const modal = document.getElementById("pdfModal");
+    modal.classList.add("hidden");
+  }
+  </script>
+
+  {% else %}
+  <p class="text-gray-500 dark:text-gray-400">No past scans found. Run a scan to generate reports.</p>
+  {% endif %}
+</div>
+
+<script>
+async function deleteScan(scanId) {
+  if (!confirm("Are you sure you want to delete this scan?")) return;
+
+  const res = await fetch(`/delete/${scanId}`, { method: "DELETE" });
+  const data = await res.json();
+
+  if (data.status === "ok") {
+    alert("Scan deleted successfully!");
+    location.reload();
+  } else {
+    alert("Failed to delete scan: " + data.message);
+  }
+}
+</script>
+
+{% endblock %}

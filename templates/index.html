@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="space-y-8">
+
+  <!-- 🧠 Start New Scan -->
+  <div class="bg-white shadow-md border border-gray-300 rounded-2xl p-6 max-w-4xl mx-auto">
+    <h2 class="text-2xl font-semibold mb-4 text-gray-700">Start a New Security Scan</h2>
+
+    <form id="scan-form" class="flex gap-3">
+      <input
+        id="target"
+        name="target"
+        type="url"
+        placeholder="Enter target URL (e.g. http://testphp.vulnweb.com)"
+        class="flex-grow border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-indigo-400 outline-none"
+        required
+      />
+      <button
+        type="submit"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition"
+      >
+        Start Scan
+      </button>
+    </form>
+
+    <div id="loading" class="hidden flex flex-col items-center mt-6">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      <p class="mt-3 text-gray-600 font-medium">Scanning in progress... please wait</p>
+    </div>
+  </div>
+
+  <!-- 📊 Results Section -->
+  <div id="results" class="hidden space-y-8 max-w-6xl mx-auto">
+
+    <div class="flex justify-between items-center">
+      <h2 class="text-2xl font-semibold text-gray-700">Scan Report</h2>
+      <button
+        id="downloadReport"
+        class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow hover:bg-indigo-700 transition"
+      >
+        ⬇️ Download Report (PDF)
+      </button>
+    </div>
+
+    <!-- 🧩 Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white shadow border border-gray-300 rounded-2xl p-5">
+        <h3 class="text-sm font-medium text-gray-500">Target</h3>
+        <p id="summary-target" class="text-lg font-semibold text-gray-900"></p>
+      </div>
+      <div class="bg-white shadow border border-gray-300 rounded-2xl p-5">
+        <h3 class="text-sm font-medium text-gray-500">Score</h3>
+        <p id="summary-score" class="text-3xl font-extrabold text-indigo-600"></p>
+      </div>
+      <div class="bg-white shadow border border-gray-300 rounded-2xl p-5">
+        <h3 class="text-sm font-medium text-gray-500">Findings</h3>
+        <p id="summary-findings" class="text-3xl font-extrabold text-red-600"></p>
+      </div>
+    </div>
+
+    <!-- 🎯 Severity Chart -->
+    <div class="bg-white shadow border border-gray-300 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-700">Severity Breakdown</h2>
+      <canvas id="severityChart" height="100"></canvas>
+    </div>
+
+    <!-- 🧠 Findings Table -->
+    <div class="bg-white shadow border border-gray-300 rounded-2xl p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-700">Vulnerability Findings</h2>
+      <table class="min-w-full border border-gray-300 rounded-lg overflow-hidden">
+        <thead class="bg-gray-100 text-gray-700">
+          <tr>
+            <th class="py-3 px-4 text-left">Type</th>
+            <th class="py-3 px-4 text-left">Parameter</th>
+            <th class="py-3 px-4 text-left">Severity</th>
+            <th class="py-3 px-4 text-left">OWASP</th>
+            <th class="py-3 px-4 text-left">Recommendation</th>
+          </tr>
+        </thead>
+        <tbody id="findings-table" class="divide-y divide-gray-200 text-gray-800"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const form = document.getElementById("scan-form");
+const loading = document.getElementById("loading");
+const results = document.getElementById("results");
+const findingsTable = document.getElementById("findings-table");
+const downloadBtn = document.getElementById("downloadReport");
+let currentScanId = null;
+let severityChart = null;
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const target = document.getElementById("target").value.trim();
+  if (!target) return alert("Enter a valid URL");
+
+  loading.classList.remove("hidden");
+  results.classList.add("hidden");
+
+  const response = await fetch("/scan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target })
+  });
+
+  const data = await response.json();
+  currentScanId = data.scan_id;
+
+  const poll = async () => {
+    const res = await fetch(`/scan/result/${currentScanId}`);
+    const resultData = await res.json();
+
+    if (resultData.status === "Running") {
+      setTimeout(poll, 3000);
+      return;
+    }
+
+    loading.classList.add("hidden");
+    results.classList.remove("hidden");
+
+    document.getElementById("summary-target").textContent = resultData.target;
+    document.getElementById("summary-score").textContent = resultData.score + " / 100";
+
+    findingsTable.innerHTML = resultData.findings.map(f => `
+      <tr>
+        <td class="py-2 px-3">${f.type}</td>
+        <td class="py-2 px-3">${f.parameter || '-'}</td>
+        <td class="py-2 px-3 font-semibold ${
+          f.severity === "High" ? "text-red-600" :
+          f.severity === "Medium" ? "text-yellow-600" :
+          "text-green-600"
+        }">${f.severity}</td>
+        <td class="py-2 px-3">${f.owasp_mapping || '-'}</td>
+        <td class="py-2 px-3">${f.recommendation || '-'}</td>
+      </tr>
+    `).join("");
+
+    const sev = { Low: 0, Medium: 0, High: 0 };
+    resultData.findings.forEach(f => sev[f.severity]++);
+
+    if (severityChart) severityChart.destroy();
+    severityChart = new Chart(document.getElementById("severityChart"), {
+      type: "doughnut",
+      data: {
+        labels: ["Low", "Medium", "High"],
+        datasets: [{ data: [sev.Low, sev.Medium, sev.High], backgroundColor: ["#22C55E", "#FACC15", "#EF4444"] }]
+      }
+    });
+  };
+
+  poll();
+});
+
+downloadBtn.addEventListener("click", () => {
+  window.open(`/report/${currentScanId}`, "_blank");
+});
+</script>
+
+{% endblock %}

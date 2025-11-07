@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2 class="text-3xl font-bold mb-8 text-indigo-600 flex items-center gap-2">
+  <span>🧰</span> Security Tools
+</h2>
+
+<div class="space-y-8">
+
+  <!-- WHOIS LOOKUP -->
+  <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-300 hover:shadow-lg transition-all duration-300">
+    <h3 class="text-xl font-semibold flex items-center gap-2 mb-2">
+      🔍 WHOIS Lookup
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">Retrieve domain registration details.</p>
+
+    <div class="flex gap-3">
+      <input id="whois-input" type="text" placeholder="example.com"
+        class="border w-full p-3 rounded-lg focus:ring-2 focus:ring-indigo-400 bg-gray-50">
+      <button onclick="runWHOIS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg">
+        Lookup
+      </button>
+    </div>
+
+    <pre id="whois-output"
+      class="mt-4 text-sm bg-gray-100 text-gray-800 p-4 rounded-lg h-48 overflow-auto border"></pre>
+  </div>
+
+  <!-- DNS LOOKUP -->
+  <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-300 hover:shadow-lg transition-all duration-300">
+    <h3 class="text-xl font-semibold flex items-center gap-2 mb-2">
+      🌐 DNS Lookup
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">Check A, MX, NS, and CNAME DNS records.</p>
+
+    <div class="flex gap-3">
+      <input id="dns-input" type="text" placeholder="example.com"
+        class="border w-full p-3 rounded-lg focus:ring-2 focus:ring-indigo-400 bg-gray-50">
+      <button onclick="runDNS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg">
+        Lookup
+      </button>
+    </div>
+
+    <pre id="dns-output"
+      class="mt-4 text-sm bg-gray-100 text-gray-800 p-4 rounded-lg h-48 overflow-auto border"></pre>
+  </div>
+
+  <!-- SERVER INFO -->
+  <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-300 hover:shadow-lg transition-all duration-300">
+    <h3 class="text-xl font-semibold flex items-center gap-2 mb-2">
+      🖥 Server Information
+    </h3>
+    <p class="text-sm text-gray-500 mb-4">Retrieve server response headers & banner details.</p>
+
+    <div class="flex gap-3">
+      <input id="server-input" type="text" placeholder="https://example.com"
+        class="border w-full p-3 rounded-lg focus:ring-2 focus:ring-indigo-400 bg-gray-50">
+      <button onclick="runServerInfo()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg">
+        Fetch Info
+      </button>
+    </div>
+
+    <pre id="server-output"
+      class="mt-4 text-sm bg-gray-100 text-gray-800 p-4 rounded-lg h-48 overflow-auto border"></pre>
+  </div>
+
+</div>
+
+<script>
+async function runWHOIS() {
+  const d = document.getElementById("whois-input").value;
+  const res = await fetch("/tools/whois?domain=" + d);
+  document.getElementById("whois-output").textContent = await res.text();
+}
+
+async function runDNS() {
+  const d = document.getElementById("dns-input").value;
+  const res = await fetch("/tools/dns?domain=" + d);
+  document.getElementById("dns-output").textContent = await res.text();
+}
+
+async function runServerInfo() {
+  const u = document.getElementById("server-input").value;
+  const res = await fetch("/tools/server?url=" + u);
+  document.getElementById("server-output").textContent = await res.text();
+}
+</script>
+
+{% endblock %}

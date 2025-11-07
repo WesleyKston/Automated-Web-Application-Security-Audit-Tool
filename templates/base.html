@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISAA - Security Audit Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { background-color: #0F172A; color: #E2E8F0; }
+        .active { background-color: #4338CA; }
+    </style>
+</head>
+<body class="flex">
+
+    <!-- Sidebar -->
+    <div class="sidebar bg-[#0F172A] text-white w-64 min-h-screen flex flex-col justify-between border-r border-gray-700">
+        <div>
+            <div class="p-6 text-2xl font-bold text-indigo-400 tracking-wide border-b border-gray-700">
+                ISAA <span class="text-sm text-gray-400 font-normal">v1.0</span>
+            </div>
+            <ul class="mt-4 space-y-2 px-3">
+                <li><a href="/" class="flex items-center p-3 rounded-xl hover:bg-indigo-600 transition"><i class="fa-solid fa-gauge mr-3"></i> Dashboard</a></li>
+                <li><a href="/new-scan" class="flex items-center p-3 rounded-xl hover:bg-indigo-600 transition"><i class="fa-solid fa-bug mr-3"></i> New Scan</a></li>
+                <li><a href="/reports" class="flex items-center p-3 rounded-xl hover:bg-indigo-600 transition"><i class="fa-solid fa-file-lines mr-3"></i> Reports</a></li>
+                <li><a href="/settings" class="flex items-center p-3 rounded-xl hover:bg-indigo-600 transition"><i class="fa-solid fa-gear mr-3"></i> Settings</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-gray-700 flex items-center justify-between">
+            <button class="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition text-sm">
+                <i class="fa-solid fa-moon"></i> Toggle Dark Mode
+            </button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 p-8 overflow-y-auto">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        const links = document.querySelectorAll('.sidebar a');
+        links.forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('bg-indigo-700');
+            }
+        });
+    </script>
+</body>
+</html>

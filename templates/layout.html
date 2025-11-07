@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ISAA - Security Scanner</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Sidebar Style (Not Collapsible) */
+    .sidebar {
+      width: 230px;
+      background: #ffffff;
+      border-right: 1px solid #dcdcdc;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    }
+
+    .nav-item {
+      border-radius: 8px;
+      transition: 0.2s ease;
+    }
+    .nav-item:hover {
+      background: rgba(99,102,241,0.15);
+    }
+    .nav-item.active {
+      background: rgba(99,102,241,0.25);
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900 min-h-screen">
+  <div class="flex">
+
+    <!-- ✅ FIXED Sidebar -->
+    <aside class="sidebar fixed top-0 left-0 min-h-screen px-4 py-5">
+      <div class="flex items-center gap-2 mb-6">
+        <span class="w-9 h-9 bg-indigo-600 text-white flex items-center justify-center rounded-lg text-lg font-bold">🔒</span>
+        <span class="text-lg font-semibold">Security Analysis System</span>
+      </div>
+
+      <nav class="space-y-1">
+        <a href="/" class="nav-item flex items-center gap-3 px-3 py-2">
+          🏠 <span>Dashboard</span>
+        </a>
+
+        <a href="/tools" class="nav-item flex items-center gap-3 px-3 py-2">
+          🧰 <span>Tools</span>
+        </a>
+
+        <a href="/settings" class="nav-item flex items-center gap-3 px-3 py-2">
+          ⚙️ <span>Settings</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- ✅ Main Content -->
+    <main class="flex-1 ml-[230px]">
+      <header class="h-16 border-b bg-white shadow-sm flex items-center px-6 sticky top-0 z-20">
+        <h1 class="text-lg font-semibold text-indigo-600">
+          {{ title if title else "Dashboard" }}
+        </h1>
+        <div class="ml-auto text-xs text-gray-500">ISAA v1.0</div>
+      </header>
+
+      <div class="max-w-6xl mx-auto p-6">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ✅ Highlight Active Page -->
+  <script>
+    const current = window.location.pathname;
+    document.querySelectorAll("nav a").forEach(a => {
+      if(a.getAttribute("href") === current){
+        a.classList.add("active");
+      }
+    });
+  </script>
+
+</body>
+</html>
